@@ -1,101 +1,97 @@
-import Image from "next/image";
+"use client"
+
+import { ToDoModal, DeleteModal } from "@/components/ToDoModal";
+import ToDoItem from "@/interfaces/ToDoItem";
+import { Button, Stack, TableContainer, Typography, Paper, Table, TableHead, Pagination, TableRow, TableCell, TableBody } from "@mui/material";
+import { useState } from "react";
+
+const rows: Array<ToDoItem> = [
+  { id: "1", title: "demo_title", description: "demo_description", dueDate: new Date(), priority: "low", completed: false },
+  { id: "2", title: "demo_title", description: "demo_description", dueDate: new Date(), priority: "low", completed: false },
+  { id: "3", title: "demo_title", description: "demo_description", dueDate: new Date(), priority: "low", completed: false },
+  { id: "4", title: "demo_title", description: "demo_description", dueDate: new Date(), priority: "low", completed: false },
+  { id: "5", title: "demo_title", description: "demo_description", dueDate: new Date(), priority: "low", completed: false },
+  { id: "6", title: "demo_title", description: "demo_description", dueDate: new Date(), priority: "low", completed: false },
+  { id: "7", title: "demo_title", description: "demo_description", dueDate: new Date(), priority: "low", completed: false },
+]
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [balance, setBalance] = useState(0);
+  const [open, setOpen] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [update, setUpdate] = useState(false);
+  const [item, setItem] = useState<ToDoItem | undefined>();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+  const handleCreate = () => {
+    setOpen(true);
+    setUpdate(false);
+    setItem(undefined);
+  }
+
+  const handleUpdate = (item: ToDoItem) => {
+    setOpen(true);
+    setUpdate(true);
+    setItem(item);
+  }
+
+  const handleDelete = (item: ToDoItem) => {
+    setOpenDelete(true);
+    setItem(item);
+  }
+
+  return (
+    <Stack padding={2} gap={2}>
+      <Stack direction="row" gap={2}>
+        <Typography variant="h5" className="mr-auto">
+          Current Balance: {balance}
+        </Typography>
+        <Button color="secondary" disabled variant="outlined">Mint</Button>
+        <Button color="secondary" variant="outlined">Burn</Button>
+      </Stack>
+      <Stack direction="row">
+        <Button color="primary" variant="outlined" onClick={handleCreate}>Create To Do</Button>
+      </Stack>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>ID</TableCell>
+              <TableCell>Title</TableCell>
+              <TableCell>Description</TableCell>
+              <TableCell>Due Date</TableCell>
+              <TableCell>Priority</TableCell>
+              <TableCell>Completed</TableCell>
+              <TableCell></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {rows.map((row) => (
+              <TableRow key={row.id}>
+                <TableCell>{row.id}</TableCell>
+                <TableCell>{row.title}</TableCell>
+                <TableCell>{row.description}</TableCell>
+                <TableCell>{row.dueDate.toDateString()}</TableCell>
+                <TableCell>{row.priority}</TableCell>
+                <TableCell>{row.completed ? "Yes" : "No"}</TableCell>
+                <TableCell>
+                  <Stack direction="row" gap={2} justifyContent="end">
+                    <Button color="secondary" variant="outlined" onClick={() => handleUpdate(row)}>Update</Button>
+                    <Button color="error" variant="outlined" onClick={() => handleDelete(row)}>Delete</Button>
+                  </Stack>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <Stack direction="row" gap={2} justifyContent="end" alignItems="center">
+        <Typography>
+          1-5 of 9
+        </Typography>
+        <Pagination count={2} />
+      </Stack>
+      {open && <ToDoModal open={open} onClose={() => setOpen(false)} update={update} item={item} />}
+      {openDelete && <DeleteModal open={openDelete} onClose={() => setOpenDelete(false)} item={item} />}
+    </Stack>
   );
 }

@@ -1,6 +1,10 @@
+
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import Provider from "./providers";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -28,7 +32,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <Provider>
+          <div className="min-h-screen grid" style={{ gridTemplateRows: "auto 1fr auto" }}>
+            <Header />
+            {children}
+            <Footer />
+          </div>
+        </Provider>
       </body>
     </html>
   );
