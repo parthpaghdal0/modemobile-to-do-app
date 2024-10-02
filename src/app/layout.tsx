@@ -33,7 +33,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Provider>
-          <div className="min-h-screen grid" style={{ gridTemplateRows: "auto 1fr auto" }}>
+          <div className="min-h-screen flex flex-col">
             <Header />
             {children}
             <Footer />

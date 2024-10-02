@@ -1,19 +1,10 @@
 "use client"
 
 import { ToDoModal, DeleteModal } from "@/components/ToDoModal";
+import { useToDoContext } from "@/contexts/ToDoContext";
 import ToDoItem from "@/interfaces/ToDoItem";
 import { Button, Stack, TableContainer, Typography, Paper, Table, TableHead, Pagination, TableRow, TableCell, TableBody } from "@mui/material";
-import { useState } from "react";
-
-const rows: Array<ToDoItem> = [
-  { id: "1", title: "demo_title", description: "demo_description", dueDate: new Date(), priority: "low", completed: false },
-  { id: "2", title: "demo_title", description: "demo_description", dueDate: new Date(), priority: "low", completed: false },
-  { id: "3", title: "demo_title", description: "demo_description", dueDate: new Date(), priority: "low", completed: false },
-  { id: "4", title: "demo_title", description: "demo_description", dueDate: new Date(), priority: "low", completed: false },
-  { id: "5", title: "demo_title", description: "demo_description", dueDate: new Date(), priority: "low", completed: false },
-  { id: "6", title: "demo_title", description: "demo_description", dueDate: new Date(), priority: "low", completed: false },
-  { id: "7", title: "demo_title", description: "demo_description", dueDate: new Date(), priority: "low", completed: false },
-]
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const [balance, setBalance] = useState(0);
@@ -21,6 +12,8 @@ export default function Home() {
   const [openDelete, setOpenDelete] = useState(false);
   const [update, setUpdate] = useState(false);
   const [item, setItem] = useState<ToDoItem | undefined>();
+
+  const { todos, refreshToDo, totalCount, page, setPage } = useToDoContext();
 
   const handleCreate = () => {
     setOpen(true);
@@ -39,14 +32,21 @@ export default function Home() {
     setItem(item);
   }
 
+  useEffect(() => {
+    if (todos === null)
+      refreshToDo();
+  }, [todos])
+
+  const completed = todos?.reduce((cnt, item) => cnt + (item.completed ? 1 : 0), 0);
+
   return (
-    <Stack padding={2} gap={2}>
+    <Stack padding={2} gap={2} marginBottom="auto">
       <Stack direction="row" gap={2}>
         <Typography variant="h5" className="mr-auto">
           Current Balance: {balance}
         </Typography>
-        <Button color="secondary" disabled variant="outlined">Mint</Button>
-        <Button color="secondary" variant="outlined">Burn</Button>
+        <Button color="secondary" disabled={completed === undefined || completed < 2} variant="outlined">Mint</Button>
+        <Button color="secondary" disabled={balance <= 0} variant="outlined">Burn</Button>
       </Stack>
       <Stack direction="row">
         <Button color="primary" variant="outlined" onClick={handleCreate}>Create To Do</Button>
@@ -65,12 +65,22 @@ export default function Home() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((row) => (
-              <TableRow key={row.id}>
+            {(todos === null || totalCount === 0) &&
+              <TableRow>
+                <TableCell colSpan={7}>
+                  <Stack paddingY={20} alignItems="center">
+                    <Typography>
+                      {todos === null ? "Loading ..." : "No items found"}
+                    </Typography>
+                  </Stack>
+                </TableCell>
+              </TableRow>}
+            {todos?.map((row) => {
+              return <TableRow key={row.id}>
                 <TableCell>{row.id}</TableCell>
                 <TableCell>{row.title}</TableCell>
                 <TableCell>{row.description}</TableCell>
-                <TableCell>{row.dueDate.toDateString()}</TableCell>
+                <TableCell>{new Date(row.dueDate).toDateString()}</TableCell>
                 <TableCell>{row.priority}</TableCell>
                 <TableCell>{row.completed ? "Yes" : "No"}</TableCell>
                 <TableCell>
@@ -80,15 +90,15 @@ export default function Home() {
                   </Stack>
                 </TableCell>
               </TableRow>
-            ))}
+            })}
           </TableBody>
         </Table>
       </TableContainer>
       <Stack direction="row" gap={2} justifyContent="end" alignItems="center">
         <Typography>
-          1-5 of 9
+          {(page - 1) * 10 + 1}-{(page - 1) * 10 + (todos?.length || 0)} of {totalCount}
         </Typography>
-        <Pagination count={2} />
+        <Pagination count={Math.ceil(totalCount / 10)} onChange={(e, page) => setPage(page)} />
       </Stack>
       {open && <ToDoModal open={open} onClose={() => setOpen(false)} update={update} item={item} />}
       {openDelete && <DeleteModal open={openDelete} onClose={() => setOpenDelete(false)} item={item} />}

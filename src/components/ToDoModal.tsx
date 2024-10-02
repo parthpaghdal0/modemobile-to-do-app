@@ -6,6 +6,9 @@ import { Modal, Typography, Stack, TextField, Select, MenuItem, FormControl, Inp
 import { DatePicker } from "@mui/x-date-pickers";
 
 import dayjs from "dayjs";
+import axios from "axios";
+import { useToDoContext } from "@/contexts/ToDoContext";
+import { useToastContext } from "@/contexts/ToastContext";
 
 const style = {
     position: 'absolute' as 'absolute',
@@ -24,17 +27,42 @@ const style = {
 
 export const ToDoModal = ({ open, onClose, update, item }: ToDoModalProps) => {
     const [title, setTitle] = useState(item?.title || "");
-    const [descripition, setDescription] = useState(item?.description || "");
-    const [dueDate, setDueDate] = useState(dayjs(item?.dueDate));
+    const [description, setDescription] = useState(item?.description || "");
+    const [dueDate, setDueDate] = useState(item?.dueDate ? dayjs(item.dueDate) : null);
     const [priority, setPriority] = useState(item?.priority || "");
     const [completed, setCompleted] = useState(item?.completed || false);
 
-    const handleSubmit = () => {
+    const { refreshToDo } = useToDoContext();
+    const { showToast } = useToastContext();
+
+    const handleSubmit = async () => {
         if (update) {
-            console.log(`Updating ${item?.id} ${title} ${descripition} ${dueDate} ${priority} ${completed}`);
+            try {
+                const res = await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL}/todos/${item?.id}`, {
+                    title,
+                    description,
+                    dueDate,
+                    priority,
+                    completed
+                })
+                refreshToDo();
+            } catch (e: any) {
+                showToast(e.response.data.error);
+            }
         }
         else {
-            console.log(`Creating ${title} ${descripition} ${dueDate} ${priority} ${completed}`);
+            try {
+                const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/todos`, {
+                    title,
+                    description,
+                    dueDate,
+                    priority,
+                    completed
+                })
+                refreshToDo();
+            } catch (e: any) {
+                showToast(e.response.data.error);
+            }
         }
         onClose();
     }
@@ -53,8 +81,8 @@ export const ToDoModal = ({ open, onClose, update, item }: ToDoModalProps) => {
                     <TextField disabled variant="outlined" value={item?.id} label="ID" />
                 </>}
                 <TextField variant="outlined" label="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-                <TextField variant="outlined" label="Description" value={descripition} onChange={(e) => setDescription(e.target.value)} />
-                <DatePicker label="Due Date" value={dueDate} onChange={(e) => setDueDate(dueDate)} />
+                <TextField variant="outlined" label="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
+                <DatePicker label="Due Date" value={dueDate} onChange={(e) => setDueDate(e)} />
                 <FormControl>
                     <InputLabel>Priority</InputLabel>
                     <Select label="Priority" value={priority} onChange={(e) => setPriority(e.target.value)}>
@@ -65,7 +93,7 @@ export const ToDoModal = ({ open, onClose, update, item }: ToDoModalProps) => {
                 </FormControl>
                 <Stack direction="row" alignItems="center" justifyContent="space-between">
                     <Typography>Completed</Typography>
-                    <Switch value={completed} onChange={(e) => setCompleted(e.target.checked)} />
+                    <Switch defaultChecked={completed} value={completed} onChange={(e) => setCompleted(e.target.checked)} />
                 </Stack>
                 <Stack direction="row" gap={2} justifyContent="end">
                     <Button variant="outlined" onClick={handleSubmit}>{update ? "Update" : "Create"}</Button>
@@ -77,8 +105,16 @@ export const ToDoModal = ({ open, onClose, update, item }: ToDoModalProps) => {
 }
 
 export const DeleteModal = ({ open, onClose, item }: ToDoModalProps) => {
-    const handleSubmit = () => {
-        console.log(`Removing ${item?.id}`);
+    const { refreshToDo } = useToDoContext();
+    const { showToast } = useToastContext();
+
+    const handleSubmit = async () => {
+        try {
+            const res = await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/todos/${item?.id}`)
+            refreshToDo();
+        } catch (e: any) {
+            showToast(e.response.data.error);
+        }
         onClose();
     }
 
