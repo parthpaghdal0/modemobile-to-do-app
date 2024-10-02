@@ -2,18 +2,29 @@
 
 import { ToDoModal, DeleteModal } from "@/components/ToDoModal";
 import { useToDoContext } from "@/contexts/ToDoContext";
+import { useActions } from "@/hooks/useActions";
+import { useBalances } from "@/hooks/useBalances";
 import ToDoItem from "@/interfaces/ToDoItem";
 import { Button, Stack, TableContainer, Typography, Paper, Table, TableHead, Pagination, TableRow, TableCell, TableBody } from "@mui/material";
 import { useEffect, useState } from "react";
+import { useWeb3ModalAccount } from '@web3modal/ethers/react'
+import { formatUnits } from 'ethers'
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const [balance, setBalance] = useState(0);
+  const { address, isConnected } = useWeb3ModalAccount()
+  const router = useRouter();
+
   const [open, setOpen] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [update, setUpdate] = useState(false);
   const [item, setItem] = useState<ToDoItem | undefined>();
+  const [tokenId, setTokenId] = useState(0);
 
   const { todos, refreshToDo, totalCount, page, setPage } = useToDoContext();
+  const { mintToken, burnToken } = useActions();
+  const { balance, fetchBalance } = useBalances();
+  const formattedBalance = Number(formatUnits(balance, 18)).toLocaleString()
 
   const handleCreate = () => {
     setOpen(true);
@@ -32,21 +43,43 @@ export default function Home() {
     setItem(item);
   }
 
+  const handleMint = async () => {
+    const { success, message, tokenId } = await mintToken();
+    if (success)
+      setTokenId(tokenId)
+  }
+
+  const handleBurn = async () => {
+    if (tokenId <= 0) return;
+    const { success, message } = await burnToken(tokenId);
+    if (success) {
+      await fetchBalance();
+      setTokenId(0);
+    }
+  }
+
   useEffect(() => {
     if (todos === null)
       refreshToDo();
   }, [todos])
 
+  useEffect(() => {
+    fetchBalance();
+  }, [])
+
   const completed = todos?.reduce((cnt, item) => cnt + (item.completed ? 1 : 0), 0);
+
+  if (!isConnected)
+    router.push("/login");
 
   return (
     <Stack padding={2} gap={2} marginBottom="auto">
       <Stack direction="row" gap={2}>
         <Typography variant="h5" className="mr-auto">
-          Current Balance: {balance}
+          Current Balance: {formattedBalance}
         </Typography>
-        <Button color="secondary" disabled={completed === undefined || completed < 2} variant="outlined">Mint</Button>
-        <Button color="secondary" disabled={balance <= 0} variant="outlined">Burn</Button>
+        <Button color="secondary" onClick={handleMint} disabled={false/*completed === undefined || completed < 2*/} variant="outlined">Mint</Button>
+        <Button color="secondary" onClick={handleBurn} disabled={tokenId == 0} variant="outlined">Burn</Button>
       </Stack>
       <Stack direction="row">
         <Button color="primary" variant="outlined" onClick={handleCreate}>Create To Do</Button>
